@@ -8,6 +8,7 @@ import { navigationRouter } from "./api/v1/navigation"; // ナビゲーション
 import { collectionRouter } from "./api/v1/collection"; // コレクションのエンドポイント
 
 import { dtsRouter as v2DtsRouter } from "./api/v2/dts";
+import { collectionRouter as v2CollectionRouter } from "./api/v2/collection";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -29,6 +30,8 @@ app.use("/api/v1/dts/navigation", navigationRouter);
 app.use("/api/v1/dts/collections", collectionRouter);
 
 app.use("/api/v2/dts", v2DtsRouter);
+
+app.use("/api/v2/dts/collection", v2CollectionRouter);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
