@@ -111,8 +111,12 @@ navigationRouter.get("/", async (req: Request, res: Response) => {
       }
     }
   } else {
-    // const refString = ref as string;
     const targetMembers = membersMap[refString];
+
+    if(!targetMembers) {
+      res.status(404).json({ error: "Ref not found" });
+      return;
+    }
 
     // line
     if(refString.includes("http")) {
