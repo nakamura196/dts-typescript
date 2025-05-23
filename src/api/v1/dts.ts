@@ -4,11 +4,11 @@ export const dtsRouter = Router();
 
 dtsRouter.get("/", (req: Request, res: Response) => {
   res.json({
-    navigation: "/api/dts/navigation",
-    "@id": "/api/dts",
+    navigation: "/api/v1/dts/navigation",
+    "@id": "/api/v1/dts",
     "@type": "EntryPoint",
-    collections: "/api/dts/collections",
+    collections: "/api/v1/dts/collections",
     "@context": "dts/EntryPoint.jsonld",
-    documents: "/api/dts/document",
+    documents: "/api/v1/dts/document",
   });
 });

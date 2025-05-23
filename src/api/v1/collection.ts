@@ -50,11 +50,11 @@ collectionRouter.get("/", async (req: Request, res: Response) => {
               },
             ],
           },
-          "dts:passage": `/api/dts/document?id=${memberId}`,
+          "dts:passage": `/api/v1/dts/document?id=${memberId}`,
           title: item.label,
           "@id": memberId,
           "@type": "Resource",
-          "dts:references": `/api/dts/navigation?id=${memberId}`,
+          "dts:references": `/api/v1/dts/navigation?id=${memberId}`,
           "dts:citeDepth": 1,
         });
       }
@@ -81,7 +81,7 @@ collectionRouter.get("/", async (req: Request, res: Response) => {
             "@type": "Collection",
             totalItems: members.length,
             title: COLLECTION_TITLE,
-            collection: `/api/dts/collections?id=${COLLECTION_ID}{&ref}`,
+            collection: `/api/v1/dts/collections?id=${COLLECTION_ID}{&ref}`,
           },
         ],
         title: "None",

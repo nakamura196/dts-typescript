@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { getDocument } from "../utils/xmlParser"; // ユーティリティ関数として外部ファイルに分離
+import { getDocument } from "../../utils/xmlParser"; // ユーティリティ関数として外部ファイルに分離
 
 export const navigationRouter = Router();
 
@@ -49,10 +49,10 @@ navigationRouter.get("/", async (req: Request, res: Response) => {
 
   // パースされたデータを処理（例: ナビゲーションデータを作成）
   const navigationData = {
-    passage: `/api/dts/document?id=${id}{&ref}`,
+    passage: `/api/v1/dts/document?id=${id}{&ref}`,
     level: 1,
     citeType: "line",
-    "@id": `/api/dts/navigation?level=1&id=${id}${
+    "@id": `/api/v1/dts/navigation?level=1&id=${id}${
       targets.length > 0 ? `&ref=${targets.join(",")}` : ""
     }`,
     citeDepth: 1,
