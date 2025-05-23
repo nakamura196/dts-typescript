@@ -16,11 +16,11 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.get("/", (req: Request, res: Response) => {
-  res.redirect("/api/v1/dts");
+  res.redirect("/api/v2/dts");
 });
 
 app.get("/api/dts", (req: Request, res: Response) => {
-  res.redirect("/api/v1/dts");
+  res.redirect("/api/v2/dts");
 });
 
 app.use("/api/v1/dts", dtsRouter);
