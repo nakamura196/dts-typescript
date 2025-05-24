@@ -18,6 +18,7 @@
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
+    "xml-formatter": "^3.6.6",
     "xmldom": "^0.6.0"
   },
   "devDependencies": {

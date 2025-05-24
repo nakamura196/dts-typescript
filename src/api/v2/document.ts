@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { getDocument } from "../../utils/xmlParser"; // ユーティリティ関数として外部ファイルに分離
 
 import { XMLSerializer } from "xmldom";
+import xmlFormatter from 'xml-formatter';
 
 export const documentRouter = Router();
 
@@ -49,8 +50,8 @@ documentRouter.get("/", async (req: Request, res: Response) => {
       teiCloned.documentElement.setAttribute('xmlns:dts', dtsNamespace);
     }
     
-    const fragment = teiCloned.createElementNS(dtsNamespace, 'dts:fragment');
-    body.appendChild(fragment);
+    const wrapper = teiCloned.createElementNS(dtsNamespace, 'dts:wrapper');
+    body.appendChild(wrapper);
 
     // lineの場合
     if(refString.includes("http")) {
@@ -71,13 +72,20 @@ documentRouter.get("/", async (req: Request, res: Response) => {
         return;
       }
 
-      fragment.appendChild(foundSeg);
+      wrapper.appendChild(foundSeg);
 
       const serializer = new XMLSerializer();
       const xmlString = serializer.serializeToString(teiCloned);
+      
+      // xml-formatterを使用して整形
+      const formattedXml = xmlFormatter(xmlString, {
+        indentation: '  ',
+        collapseContent: true,
+        lineSeparator: '\n'
+      });
 
       res.set("Content-Type", "application/xml");
-      res.send(xmlString);
+      res.send(formattedXml);
       
     } else {
       // pageの場合
@@ -104,13 +112,20 @@ documentRouter.get("/", async (req: Request, res: Response) => {
         }
       }
 
-      fragment.appendChild(newP); 
+      wrapper.appendChild(newP); 
 
       const serializer = new XMLSerializer();
       const xmlString = serializer.serializeToString(teiCloned);
+      
+      // xml-formatterを使用して整形
+      const formattedXml = xmlFormatter(xmlString, {
+        indentation: '  ',
+        collapseContent: true,
+        lineSeparator: '\n'
+      });
 
       res.set("Content-Type", "application/xml");
-      res.send(xmlString);
+      res.send(formattedXml);
     }
 
     res.status(400).json({ error: "Not Found" });
