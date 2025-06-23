@@ -12,11 +12,11 @@
       "destination": "/src/index.ts"
     },
     {
-      "source": "/api-docs/(.*)",
+      "source": "/api-docs",
       "destination": "/src/index.ts"
     },
     {
-      "source": "/api-docs",
+      "source": "/swagger.json",
       "destination": "/src/index.ts"
     }
   ],
@@ -41,13 +41,6 @@
           "key": "Access-Control-Allow-Headers",
           "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
         }
-      ]
-    },
-    {
-      "source": "/api-docs/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     }
   ]
