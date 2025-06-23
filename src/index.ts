@@ -62,7 +62,7 @@ console.log("API paths:", swaggerOptions.apis);
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
 // デバッグ用: 生成されたスペックを確認
-console.log("Generated paths:", Object.keys(swaggerSpec.paths || {}));
+console.log("Generated paths:", Object.keys((swaggerSpec as any).paths || {}));
 
 // CORS設定
 app.use(cors());
@@ -123,26 +123,26 @@ app.get("/api-docs", (_req: Request, res: Response) => {
 });
 
 // デバッグ用のエンドポイント
-app.get("/debug", (_req: Request, res: Response) => {
+app.get("/debug", async (_req: Request, res: Response) => {
   const { glob } = require('glob');
   
-  const debugInfo = {
+  const debugInfo: any = {
     cwd: process.cwd(),
     dirname: __dirname,
     apiPaths: swaggerOptions.apis,
-    generatedPaths: Object.keys(swaggerSpec.paths || {}),
+    generatedPaths: Object.keys((swaggerSpec as any).paths || {}),
     availableFiles: []
   };
   
   // 各パスパターンでファイルを検索
-  swaggerOptions.apis.forEach(async (pattern) => {
+  for (const pattern of swaggerOptions.apis) {
     try {
       const files = await glob(pattern);
       debugInfo.availableFiles.push({ pattern, files });
-    } catch (error) {
+    } catch (error: any) {
       debugInfo.availableFiles.push({ pattern, error: error.message });
     }
-  });
+  }
   
   res.json(debugInfo);
 });
