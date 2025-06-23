@@ -46,8 +46,12 @@ const swaggerSpec = swaggerJSDoc(swaggerOptions);
 // CORS設定
 app.use(cors());
 
-// Swagger UI
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Express JSON パーサー（必要に応じて）
+app.use(express.json());
+
+// Swagger UI静的ファイルの配信設定
+app.use("/api-docs", swaggerUi.serve);
+app.get("/api-docs", swaggerUi.setup(swaggerSpec));
 
 app.get("/", (_req: Request, res: Response) => {
   res.redirect("/api/v2/dts");
