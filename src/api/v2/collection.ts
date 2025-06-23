@@ -74,6 +74,8 @@ export const collectionRouter = Router();
  *                         type: string
  *                       citationTrees:
  *                         type: array
+ *                         items:
+ *                           type: object
  *       500:
  *         description: Internal server error
  */
