@@ -38,20 +38,34 @@ const swaggerOptions = {
         description: "Development server",
       },
     ],
+    tags: [
+      {
+        name: "DTS v2",
+        description: "Entry point operations"
+      },
+      {
+        name: "Collections v2",
+        description: "Collection management operations"
+      },
+      {
+        name: "Navigation v2",
+        description: "Navigation operations"
+      },
+      {
+        name: "Document v2",
+        description: "Document operations"
+      }
+    ],
   },
   apis: [
     // TypeScriptファイルのパス（開発環境用）
-    path.join(process.cwd(), "src", "api", "v1", "*.ts"),
     path.join(process.cwd(), "src", "api", "v2", "*.ts"),
-    "./src/api/v1/*.ts",
     "./src/api/v2/*.ts",
     // コンパイル済みJavaScriptファイルのパス（本番環境用）
-    path.join(__dirname, "api", "v1", "*.js"),
     path.join(__dirname, "api", "v2", "*.js"),
     // 追加のパスパターン
-    path.join(__dirname, "api", "v1", "*.ts"),
     path.join(__dirname, "api", "v2", "*.ts")
-  ], // 複数のパスパターンを試行
+  ], // v2のみを対象
 };
 
 // デバッグ用: パス情報を確認
@@ -154,7 +168,54 @@ app.get("/swagger.json", (_req: Request, res: Response) => {
 });
 
 app.get("/", (_req: Request, res: Response) => {
-  res.redirect("/api/v2/dts");
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kouigenjimonogatari DTS API Documentation</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.0.0/swagger-ui.css" />
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    body {
+      margin:0;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.0.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.0.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      const ui = SwaggerUIBundle({
+        url: '/swagger.json',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout"
+      });
+    };
+  </script>
+</body>
+</html>`;
+  
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
 });
 
 app.get("/api/dts", (_req: Request, res: Response) => {
