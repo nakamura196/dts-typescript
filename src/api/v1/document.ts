@@ -1,11 +1,11 @@
 import { Router, Request, Response } from "express";
 import { getDocument } from "../../utils/xmlParser"; // ユーティリティ関数として外部ファイルに分離
 
-import { DOMParser, XMLSerializer } from "xmldom";
+import { DOMParser, XMLSerializer, Document as XMLDocument, Node as XMLNode, Element as XMLElement } from "@xmldom/xmldom";
 
 export const documentRouter = Router();
 
-const createNewDocument = (foundSeg: ParentNode | null) => {
+const createNewDocument = (foundSeg: XMLNode | null) => {
   const parser = new DOMParser();
 
   // 新しいツリーを構築: 最上位から親要素を辿り、seg要素のみを含むツリーを作成
@@ -15,10 +15,10 @@ const createNewDocument = (foundSeg: ParentNode | null) => {
   ); // 新しいXMLドキュメントを作成
   let currentNode = newDoc.getElementsByTagName("dts:fragment")[0]; // 新しいドキュメントのルート要素
 
-  const elementStack: any[] = []; // 親要素を一時的に格納するスタック
+  const elementStack: XMLNode[] = []; // 親要素を一時的に格納するスタック
 
   // seg要素の親を辿り、すべての親要素をスタックに追加
-  let parent: ParentNode | null = foundSeg;
+  let parent: XMLNode | null = foundSeg;
   while (parent && parent.nodeType === 1) {
     // parentがElement（nodeType 1）の場合のみ処理
     elementStack.push(parent);
@@ -36,12 +36,13 @@ const createNewDocument = (foundSeg: ParentNode | null) => {
     const element = elementStack.pop();
     if (!element) continue; // elementがundefinedになる可能性に対応
 
-    const newElement = newDoc.createElement(element.nodeName); // 新しい要素を作成
+    const newElement = newDoc.createElement((element as XMLElement).nodeName); // 新しい要素を作成
 
     // 属性もコピー
-    if (element.attributes) {
-      for (let j = 0; j < element.attributes.length; j++) {
-        const attr = element.attributes[j];
+    const xmlElement = element as XMLElement;
+    if (xmlElement.attributes) {
+      for (let j = 0; j < xmlElement.attributes.length; j++) {
+        const attr = xmlElement.attributes[j];
         newElement.setAttribute(attr.name, attr.value);
       }
     }

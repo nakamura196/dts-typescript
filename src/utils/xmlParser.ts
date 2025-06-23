@@ -1,7 +1,7 @@
 import axios from "axios";
-import { DOMParser } from "xmldom";
+import { DOMParser, Document as XMLDocument } from "@xmldom/xmldom";
 
-export const getDocument = async (id: string): Promise<Document | null> => {
+export const getDocument = async (id: string): Promise<XMLDocument | null> => {
   const vol = String(id).split(".")[1];
   const url = `https://kouigenjimonogatari.github.io/xml/lw/${vol.padStart(
     2,

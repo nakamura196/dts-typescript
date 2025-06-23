@@ -29,12 +29,12 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${port}`,
-        description: "Development server",
-      },
-      {
         url: "https://dts-typescript.vercel.app",
         description: "Production server",
+      },
+      {
+        url: `http://localhost:${port}`,
+        description: "Development server",
       },
     ],
   },

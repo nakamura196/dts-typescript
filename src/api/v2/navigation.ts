@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { getDocument } from "../../utils/xmlParser"; // ユーティリティ関数として外部ファイルに分離
+import { Element as XMLElement } from "@xmldom/xmldom";
 
 export const navigationRouter = Router();
 
@@ -104,7 +105,7 @@ navigationRouter.get("/", async (req: Request, res: Response) => {
 
   const mappings: { [key: number]: string[] } = {};
 
-  for (const seg of segs) {
+  for (const seg of segs as XMLElement[]) {
     const corresp = seg.getAttribute("corresp");
 
     if (corresp === null) {

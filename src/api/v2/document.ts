@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { getDocument } from "../../utils/xmlParser"; // ユーティリティ関数として外部ファイルに分離
 
-import { XMLSerializer } from "xmldom";
+import { XMLSerializer, Document as XMLDocument, Element as XMLElement, Node as XMLNode } from "@xmldom/xmldom";
 import xmlFormatter from 'xml-formatter';
 
 export const documentRouter = Router();
@@ -69,7 +69,7 @@ documentRouter.get("/", async (req: Request, res: Response) => {
 
     const refString = ref as string;
 
-    const teiCloned = xmlDoc.cloneNode(true) as Document;
+    const teiCloned = xmlDoc.cloneNode(true) as XMLDocument;
 
     const body = teiCloned.getElementsByTagName("body")[0];
 
@@ -93,7 +93,7 @@ documentRouter.get("/", async (req: Request, res: Response) => {
       const segs = xmlDoc.getElementsByTagName("seg");
       let foundSeg = null;
 
-      for(const seg of Array.from(segs)) {
+      for(const seg of Array.from(segs) as XMLElement[]) {
         const corresp = seg.getAttribute("corresp");
 
         if(corresp === refString) {
@@ -107,7 +107,7 @@ documentRouter.get("/", async (req: Request, res: Response) => {
         return;
       }
 
-      wrapper.appendChild(foundSeg);
+      wrapper.appendChild(foundSeg as XMLNode);
 
       const serializer = new XMLSerializer();
       const xmlString = serializer.serializeToString(teiCloned);
@@ -126,7 +126,7 @@ documentRouter.get("/", async (req: Request, res: Response) => {
       // pageの場合
       const p = xmlDoc.getElementsByTagName("body")[0].getElementsByTagName("p");
 
-      const children = Array.from(p[0].childNodes) as ChildNode[];
+      const children = Array.from(p[0].childNodes) as XMLNode[];
 
       let flg = false;
 
@@ -134,7 +134,7 @@ documentRouter.get("/", async (req: Request, res: Response) => {
 
       for(const child of children) {
         if(child.nodeName === "pb") {
-          if((child as Element).getAttribute("n") === refString) {
+          if((child as XMLElement).getAttribute("n") === refString) {
             flg = true;
           } else {
             // newP.appendChild(child);
@@ -143,7 +143,7 @@ documentRouter.get("/", async (req: Request, res: Response) => {
         }
 
         if(flg) {
-          newP.appendChild(child);
+          newP.appendChild(child as XMLNode);
         }
       }
 
