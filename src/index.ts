@@ -40,13 +40,17 @@ const swaggerOptions = {
     ],
   },
   apis: [
-    path.join(__dirname, "api", "v1", "*.ts"),
-    path.join(__dirname, "api", "v2", "*.ts"),
+    // TypeScriptファイルのパス（開発環境用）
     path.join(process.cwd(), "src", "api", "v1", "*.ts"),
     path.join(process.cwd(), "src", "api", "v2", "*.ts"),
-    // ローカル開発用
     "./src/api/v1/*.ts",
-    "./src/api/v2/*.ts"
+    "./src/api/v2/*.ts",
+    // コンパイル済みJavaScriptファイルのパス（本番環境用）
+    path.join(__dirname, "api", "v1", "*.js"),
+    path.join(__dirname, "api", "v2", "*.js"),
+    // 追加のパスパターン
+    path.join(__dirname, "api", "v1", "*.ts"),
+    path.join(__dirname, "api", "v2", "*.ts")
   ], // 複数のパスパターンを試行
 };
 
@@ -116,6 +120,31 @@ app.get("/api-docs", (_req: Request, res: Response) => {
   
   res.setHeader('Content-Type', 'text/html');
   res.send(html);
+});
+
+// デバッグ用のエンドポイント
+app.get("/debug", (_req: Request, res: Response) => {
+  const { glob } = require('glob');
+  
+  const debugInfo = {
+    cwd: process.cwd(),
+    dirname: __dirname,
+    apiPaths: swaggerOptions.apis,
+    generatedPaths: Object.keys(swaggerSpec.paths || {}),
+    availableFiles: []
+  };
+  
+  // 各パスパターンでファイルを検索
+  swaggerOptions.apis.forEach(async (pattern) => {
+    try {
+      const files = await glob(pattern);
+      debugInfo.availableFiles.push({ pattern, files });
+    } catch (error) {
+      debugInfo.availableFiles.push({ pattern, error: error.message });
+    }
+  });
+  
+  res.json(debugInfo);
 });
 
 // Swagger JSONスペックのエンドポイント

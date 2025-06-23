@@ -18,6 +18,10 @@
     {
       "source": "/swagger.json",
       "destination": "/src/index.ts"
+    },
+    {
+      "source": "/debug",
+      "destination": "/src/index.ts"
     }
   ],
   "redirects": [
