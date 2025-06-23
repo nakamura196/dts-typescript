@@ -10,6 +10,14 @@
     {
       "source": "/api/(.*)",
       "destination": "/src/index.ts"
+    },
+    {
+      "source": "/api-docs/(.*)",
+      "destination": "/src/index.ts"
+    },
+    {
+      "source": "/api-docs",
+      "destination": "/src/index.ts"
     }
   ],
   "redirects": [
