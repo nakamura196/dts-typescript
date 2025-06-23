@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import path from "path";
 
 import { dtsRouter } from "./api/v1/dts"; // DTSのエンドポイント
 import { documentRouter } from "./api/v1/document"; // ドキュメントのエンドポイント
@@ -38,10 +39,26 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ["./src/api/v1/*.ts", "./src/api/v2/*.ts"], // APIルートファイルのパス
+  apis: [
+    path.join(__dirname, "api", "v1", "*.ts"),
+    path.join(__dirname, "api", "v2", "*.ts"),
+    path.join(process.cwd(), "src", "api", "v1", "*.ts"),
+    path.join(process.cwd(), "src", "api", "v2", "*.ts"),
+    // ローカル開発用
+    "./src/api/v1/*.ts",
+    "./src/api/v2/*.ts"
+  ], // 複数のパスパターンを試行
 };
 
+// デバッグ用: パス情報を確認
+console.log("Current working directory:", process.cwd());
+console.log("__dirname:", __dirname);
+console.log("API paths:", swaggerOptions.apis);
+
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
+
+// デバッグ用: 生成されたスペックを確認
+console.log("Generated paths:", Object.keys(swaggerSpec.paths || {}));
 
 // CORS設定
 app.use(cors());
