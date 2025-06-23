@@ -3,6 +3,61 @@ import { getDocument } from "../../utils/xmlParser"; // ユーティリティ関
 
 export const navigationRouter = Router();
 
+/**
+ * @swagger
+ * /api/v1/dts/navigation:
+ *   get:
+ *     summary: Get navigation data (v1)
+ *     description: Retrieve navigation structure for a document
+ *     tags:
+ *       - Navigation v1
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Document identifier
+ *       - in: query
+ *         name: ref
+ *         required: false
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: References to filter by
+ *     responses:
+ *       200:
+ *         description: Navigation data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 passage:
+ *                   type: string
+ *                 level:
+ *                   type: number
+ *                 citeType:
+ *                   type: string
+ *                 "@id":
+ *                   type: string
+ *                 citeDepth:
+ *                   type: number
+ *                 "@context":
+ *                   type: object
+ *                 "hydra:member":
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       ref:
+ *                         type: string
+ *       400:
+ *         description: Bad request - id is required
+ *       500:
+ *         description: Internal server error
+ */
 navigationRouter.get("/", async (req: Request, res: Response) => {
   const { ref, id } = req.query;
 

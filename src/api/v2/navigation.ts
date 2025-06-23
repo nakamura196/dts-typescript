@@ -3,6 +3,74 @@ import { getDocument } from "../../utils/xmlParser"; // ユーティリティ関
 
 export const navigationRouter = Router();
 
+/**
+ * @swagger
+ * /api/v2/dts/navigation:
+ *   get:
+ *     summary: Get navigation data (v2)
+ *     description: Retrieve enhanced navigation structure with hierarchical citation support
+ *     tags:
+ *       - Navigation v2
+ *     parameters:
+ *       - in: query
+ *         name: resource
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Resource identifier
+ *       - in: query
+ *         name: ref
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Reference to filter navigation
+ *       - in: query
+ *         name: down
+ *         required: false
+ *         schema:
+ *           type: string
+ *           default: "1"
+ *         description: Navigation depth level
+ *     responses:
+ *       200:
+ *         description: Enhanced navigation data with citation trees
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 "@context":
+ *                   type: string
+ *                 dtsVersion:
+ *                   type: string
+ *                 "@type":
+ *                   type: string
+ *                 "@id":
+ *                   type: string
+ *                 resource:
+ *                   type: object
+ *                 member:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       identifier:
+ *                         type: string
+ *                       "@type":
+ *                         type: string
+ *                       level:
+ *                         type: number
+ *                       parent:
+ *                         type: string
+ *                       citeType:
+ *                         type: string
+ *       400:
+ *         description: Bad request - resource is required
+ *       404:
+ *         description: Not found - reference not found
+ *       500:
+ *         description: Internal server error
+ */
 navigationRouter.get("/", async (req: Request, res: Response) => {
   let { ref, resource, down } = req.query;
 

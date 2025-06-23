@@ -1,4 +1,7 @@
 import express, { Request, Response } from "express";
+import cors from "cors";
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 
 import { dtsRouter } from "./api/v1/dts"; // DTSのエンドポイント
 import { documentRouter } from "./api/v1/document"; // ドキュメントのエンドポイント
@@ -15,11 +18,42 @@ import { navigationRouter as v2NavigationRouter } from "./api/v2/navigation";
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get("/", (req: Request, res: Response) => {
+// Swagger設定
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Kouigenjimonogatari DTS API",
+      version: "2.0.0",
+      description: "校異源氏物語テキストDB用 Digital Text Services API。v1とv2の両方のエンドポイントを提供し、XMLテキストの取得、ナビゲーション、コレクション情報の参照が可能です。",
+    },
+    servers: [
+      {
+        url: `http://localhost:${port}`,
+        description: "Development server",
+      },
+      {
+        url: "https://dts-typescript.vercel.app",
+        description: "Production server",
+      },
+    ],
+  },
+  apis: ["./src/api/v1/*.ts", "./src/api/v2/*.ts"], // APIルートファイルのパス
+};
+
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+
+// CORS設定
+app.use(cors());
+
+// Swagger UI
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.get("/", (_req: Request, res: Response) => {
   res.redirect("/api/v2/dts");
 });
 
-app.get("/api/dts", (req: Request, res: Response) => {
+app.get("/api/dts", (_req: Request, res: Response) => {
   res.redirect("/api/v2/dts");
 });
 

@@ -6,6 +6,41 @@ import xmlFormatter from 'xml-formatter';
 
 export const documentRouter = Router();
 
+/**
+ * @swagger
+ * /api/v2/dts/document:
+ *   get:
+ *     summary: Get document content (v2)
+ *     description: Retrieve XML document content with enhanced formatting and filtering
+ *     tags:
+ *       - Document v2
+ *     parameters:
+ *       - in: query
+ *         name: resource
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Resource identifier
+ *       - in: query
+ *         name: ref
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Reference to specific segment or page
+ *     responses:
+ *       200:
+ *         description: Formatted XML document content
+ *         content:
+ *           application/xml:
+ *             schema:
+ *               type: string
+ *       400:
+ *         description: Bad request - resource is required
+ *       404:
+ *         description: Not found - reference not found
+ *       500:
+ *         description: Internal server error
+ */
 documentRouter.get("/", async (req: Request, res: Response) => {
   const { ref, resource } = req.query;
 

@@ -7,6 +7,48 @@ const COLLECTION_ID = "urn:kouigenjimonogatari";
 
 export const collectionRouter = Router();
 
+/**
+ * @swagger
+ * /api/v1/dts/collections:
+ *   get:
+ *     summary: Get collections (v1)
+ *     description: Retrieve collection information and metadata
+ *     tags:
+ *       - Collections v1
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Collection identifier
+ *     responses:
+ *       200:
+ *         description: Collection data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalItems:
+ *                   type: number
+ *                 member:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 title:
+ *                   type: string
+ *                 "@id":
+ *                   type: string
+ *                 "@type":
+ *                   type: string
+ *                 "@context":
+ *                   type: object
+ *       400:
+ *         description: Bad request - Invalid ID
+ *       500:
+ *         description: Internal server error
+ */
 collectionRouter.get("/", async (req: Request, res: Response) => {
   const url = "https://genji.dl.itc.u-tokyo.ac.jp/data/info.json";
 

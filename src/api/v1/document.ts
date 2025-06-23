@@ -66,6 +66,41 @@ const createNewDocument = (foundSeg: ParentNode | null) => {
   return newDoc;
 };
 
+/**
+ * @swagger
+ * /api/v1/dts/document:
+ *   get:
+ *     summary: Get document content (v1)
+ *     description: Retrieve XML document content, optionally filtered by reference
+ *     tags:
+ *       - Document v1
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Document identifier
+ *       - in: query
+ *         name: ref
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Reference to specific segment
+ *     responses:
+ *       200:
+ *         description: XML document content
+ *         content:
+ *           application/xml:
+ *             schema:
+ *               type: string
+ *       400:
+ *         description: Bad request - id is required
+ *       404:
+ *         description: Not found - reference not found
+ *       500:
+ *         description: Internal server error
+ */
 documentRouter.get("/", async (req: Request, res: Response) => {
   const { ref, id } = req.query;
 
