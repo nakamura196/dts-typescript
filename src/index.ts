@@ -16,7 +16,9 @@ import { collectionRouter as v2CollectionRouter } from "./api/v2/collection";
 import { documentRouter as v2DocumentRouter } from "./api/v2/document";
 import { navigationRouter as v2NavigationRouter } from "./api/v2/navigation";
 
-export const app = express();
+const app = express();
+export { app };
+export default app;
 const port = process.env.PORT || 3403;
 
 // Swagger設定
