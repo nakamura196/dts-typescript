@@ -24,7 +24,7 @@ Both versions expose the same four core endpoints: entry point, collections, doc
 
 ### Data Source Integration
 All XML document retrieval is centralized through `src/utils/xmlParser.ts`:
-- Fetches TEI/XML files from `https://kouigenjimonogatari.github.io/xml/lw/{volume}.xml`
+- Fetches TEI/XML files from `https://kouigenjimonogatari.github.io/tei/{volume}.xml`
 - Document IDs follow pattern `urn:kouigenjimonogatari.{volume}` where volume maps to padded filenames
 - Uses `@xmldom/xmldom` for secure XML parsing (migrated from vulnerable `xmldom` package)
 

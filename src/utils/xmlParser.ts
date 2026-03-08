@@ -3,7 +3,7 @@ import { DOMParser, Document as XMLDocument } from "@xmldom/xmldom";
 
 export const getDocument = async (id: string): Promise<XMLDocument | null> => {
   const vol = String(id).split(".")[1];
-  const url = `https://kouigenjimonogatari.github.io/xml/lw/${vol.padStart(
+  const url = `https://kouigenjimonogatari.github.io/tei/${vol.padStart(
     2,
     "0"
   )}.xml`;
