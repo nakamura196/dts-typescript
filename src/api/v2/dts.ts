@@ -7,23 +7,23 @@ export const dtsRouter = Router();
  * /api/v2/dts:
  *   get:
  *     summary: Get DTS API v2 entry point
- *     description: Returns the main entry point for the Digital Text Services API v2
+ *     description: Returns the main entry point for the Digital Text Services API v2 (DTS 1.0)
  *     tags:
  *       - DTS v2
  *     responses:
  *       200:
  *         description: Successful response
  *         content:
- *           application/json:
+ *           application/ld+json:
  *             schema:
  *               type: object
  *               properties:
  *                 "@context":
  *                   type: string
- *                   example: "https://distributed-text-services.github.io/specifications/context/1-alpha1.json"
+ *                   example: "https://dtsapi.org/context/v1.0.json"
  *                 dtsVersion:
  *                   type: string
- *                   example: "1-alpha"
+ *                   example: "1.0"
  *                 "@id":
  *                   type: string
  *                   example: "/api/v2/dts"
@@ -32,29 +32,23 @@ export const dtsRouter = Router();
  *                   example: "EntryPoint"
  *                 collection:
  *                   type: string
- *                   example: "/api/v2/dts/collection{?id}"
+ *                   example: "/api/v2/dts/collection{?id,page,nav}"
  *                 navigation:
  *                   type: string
- *                   example: "/api/v2/dts/navigation{?resource,ref,down}"
+ *                   example: "/api/v2/dts/navigation{?resource,ref,start,end,down,tree,page}"
  *                 document:
  *                   type: string
- *                   example: "/api/v2/dts/document{?resource,ref}"
+ *                   example: "/api/v2/dts/document{?resource,ref,start,end,tree,mediaType}"
  */
 dtsRouter.get("/", (req: Request, res: Response) => {
+  res.set("Content-Type", "application/ld+json");
   res.json({
-    "@context": "https://distributed-text-services.github.io/specifications/context/1-alpha1.json",
-    "dtsVersion": "1-alpha",
+    "@context": "https://dtsapi.org/context/v1.0.json",
+    "dtsVersion": "1.0",
     "@id": "/api/v2/dts",
     "@type": "EntryPoint",
-    "collection": "/api/v2/dts/collection{?id}",
-    "navigation": "/api/v2/dts/navigation{?resource,ref,down}",
-    "document": "/api/v2/dts/document{?resource,ref}"
-    }/*{
-    navigation: "/api/v1/dts/navigation",
-    "@id": "/api/v1/dts",
-    "@type": "EntryPoint",
-    collections: "/api/v1/dts/collections",
-    "@context": "dts/EntryPoint.jsonld",
-    documents: "/api/v1/dts/document",
-  }*/);
+    "collection": "/api/v2/dts/collection{?id,page,nav}",
+    "navigation": "/api/v2/dts/navigation{?resource,ref,start,end,down,tree,page}",
+    "document": "/api/v2/dts/document{?resource,ref,start,end,tree,mediaType}"
+  });
 });

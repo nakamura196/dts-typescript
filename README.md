@@ -1,6 +1,10 @@
 # dts-typescript
 
-Distributed Text Services (DTS) API for the TEI/XML files available in the Kouigenji Monogatari Text DB
+[Distributed Text Services (DTS)](https://dtsapi.org/) v1.0 API implementation for the TEI/XML files available in the [Kouigenji Monogatari Text DB](https://kouigenjimonogatari.github.io/) (校異源氏物語テキストDB).
+
+Multiple citation trees are supported:
+- **Default**: page / line navigation
+- **Waka** (`tree=waka`): navigation by waka (tanka) poems embedded in the text (`<lg type="waka">`)
 
 ## 🌐 Website
 
@@ -8,30 +12,25 @@ Distributed Text Services (DTS) API for the TEI/XML files available in the Kouig
 
 ## Setup
 
-Make sure to install the dependencies:
-
 ```bash
-# yarn
-yarn install
-
-# npm
 npm install
-
-# pnpm
-pnpm install
 ```
 
 ## Development Server
 
-Start the development server on http://localhost:3000
+Start the development server on http://localhost:3403
 
 ```bash
 npm run dev
 ```
 
-## Deploy
+## Test
 
-Deploy the app with Vercel:
+```bash
+npm test
+```
+
+## Deploy
 
 ```bash
 vercel deploy

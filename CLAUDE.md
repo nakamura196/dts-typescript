@@ -10,6 +10,7 @@ This is a TypeScript/Express.js implementation of the Distributed Text Services 
 
 - `npm run dev` - Start development server with hot reload (uses nodemon)
 - `npm start` - Start production server directly with ts-node
+- `npm test` - Run tests with vitest
 - `npx tsc --noEmit` - Type check without emitting files
 - `vercel deploy` - Deploy to Vercel platform
 
@@ -36,17 +37,25 @@ Each API version implements four standard DTS endpoints:
 4. **Navigation** (`/dts/navigation`) - Citation structure and references
 
 ### Key Architectural Differences v1 vs v2
+- **v2** follows DTS 1.0 specification (context: `https://dtsapi.org/context/v1.0.json`)
 - **v2** includes enhanced XML formatting using `xml-formatter`
-- **v2** supports hierarchical page/line citation structures
+- **v2** supports multiple Citation Trees: default (page/line) and waka (`tree=waka`)
 - **v2** includes Dublin Core metadata (creator, title, description, license)
 - **v2** uses `resource` parameter instead of `id` for documents/navigation
+- **v2** returns `application/ld+json` for JSON responses and `application/tei+xml` for documents
+- **v2** includes `Link` header with `rel="collection"` in document responses
+
+### Citation Trees
+Citation Trees are defined in `src/utils/citationTrees.ts` and shared across collection, navigation, and document endpoints:
+- **Default** (no `tree` param): page → line (from `<pb>` and `<seg corresp="...">`)
+- **Waka** (`tree=waka`): waka → ku (from `<lg type="waka" xml:id="waka-XXX">` and `<l n="1..5">`)
 
 ### Documentation & CORS
 - OpenAPI/Swagger documentation auto-generated from JSDoc comments
 - Swagger UI available at `/api-docs`
 - CORS enabled for all origins
 - Production: `https://dts-typescript.vercel.app`
-- Development: `http://localhost:3000`
+- Development: `http://localhost:3403`
 
 ### XML Processing Types
 When working with XML DOM operations, use the proper `@xmldom/xmldom` types:

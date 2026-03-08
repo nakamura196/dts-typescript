@@ -20,18 +20,42 @@ export const documentRouter = Router();
  *         required: true
  *         schema:
  *           type: string
- *         description: Resource identifier
+ *         description: Resource identifier (URI)
  *       - in: query
  *         name: ref
  *         required: false
  *         schema:
  *           type: string
- *         description: Reference to specific segment or page
+ *         description: Single citation node. Cannot be used with start/end.
+ *       - in: query
+ *         name: start
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Start of a range (requires end). Cannot be used with ref.
+ *       - in: query
+ *         name: end
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: End of a range (requires start). Cannot be used with ref.
+ *       - in: query
+ *         name: tree
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Citation tree identifier
+ *       - in: query
+ *         name: mediaType
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Requested media type for the response
  *     responses:
  *       200:
  *         description: Formatted XML document content
  *         content:
- *           application/xml:
+ *           application/tei+xml:
  *             schema:
  *               type: string
  *       400:
@@ -42,12 +66,34 @@ export const documentRouter = Router();
  *         description: Internal server error
  */
 documentRouter.get("/", async (req: Request, res: Response) => {
-  const { ref, resource } = req.query;
+  const { ref, resource, start, end, tree } = req.query;
 
   if (!resource) {
     res.status(400).json({ error: "resource is required" });
     return;
   }
+
+  // ref and start/end are mutually exclusive
+  if (ref && (start || end)) {
+    res.status(400).json({ error: "ref cannot be used with start/end" });
+    return;
+  }
+
+  // start and end must be used together
+  if ((start && !end) || (end && !start)) {
+    res.status(400).json({ error: "start and end must be used together" });
+    return;
+  }
+
+  // Validate tree parameter
+  const treeString = tree as string | undefined;
+  if (treeString && treeString !== "waka") {
+    res.status(404).json({ error: "Citation tree not found" });
+    return;
+  }
+
+  // DTS 1.0: Link header with rel="collection"
+  res.set("Link", `</api/v2/dts/collection?id=${resource}>; rel="collection"`);
 
   const xmlDoc = await getDocument(resource as string);
 
@@ -58,112 +104,129 @@ documentRouter.get("/", async (req: Request, res: Response) => {
 
   if (!ref) {
     // return xml
-    res.set("Content-Type", "application/xml");
-
+    res.set("Content-Type", "application/tei+xml");
     const serializer = new XMLSerializer();
-
     const xmlString = serializer.serializeToString(xmlDoc);
-
     res.send(xmlString);
-  } else {
+    return;
+  }
 
-    const refString = ref as string;
+  const refString = ref as string;
 
-    const teiCloned = xmlDoc.cloneNode(true) as XMLDocument;
+  const teiCloned = xmlDoc.cloneNode(true) as XMLDocument;
+  const body = teiCloned.getElementsByTagName("body")[0];
 
-    const body = teiCloned.getElementsByTagName("body")[0];
+  // delete p
+  const ps = body.getElementsByTagName("p");
+  for (const p of Array.from(ps)) {
+    body.removeChild(p);
+  }
 
-    // delte p
-    const ps = body.getElementsByTagName("p");
-    for(const p of Array.from(ps)) {
-      body.removeChild(p);
-    }
+  // 名前空間の設定
+  const dtsNamespace = 'https://w3id.org/api/dts#';
+  if (teiCloned.documentElement) {
+    teiCloned.documentElement.setAttribute('xmlns:dts', dtsNamespace);
+  }
 
-    // 名前空間の設定
-    const dtsNamespace = 'https://w3id.org/api/dts#';
-    if (teiCloned.documentElement) {
-      teiCloned.documentElement.setAttribute('xmlns:dts', dtsNamespace);
-    }
-    
-    const wrapper = teiCloned.createElementNS(dtsNamespace, 'dts:wrapper');
-    body.appendChild(wrapper);
+  const wrapper = teiCloned.createElementNS(dtsNamespace, 'dts:wrapper');
+  body.appendChild(wrapper);
 
-    // lineの場合
-    if(refString.includes("http")) {
-      const segs = xmlDoc.getElementsByTagName("seg");
-      let foundSeg = null;
+  if (treeString === "waka") {
+    // 和歌の取得
+    if (refString.includes(".")) {
+      // 句の取得: waka-001.3 → waka-001 の l[n="3"]
+      const [wakaId, kuN] = refString.split(".");
+      const lgs = Array.from(xmlDoc.getElementsByTagName("lg"));
+      let found = false;
 
-      for(const seg of Array.from(segs) as XMLElement[]) {
-        const corresp = seg.getAttribute("corresp");
-
-        if(corresp === refString) {
-          foundSeg = seg;
+      for (const lg of lgs as XMLElement[]) {
+        if (lg.getAttribute("xml:id") === wakaId) {
+          const lines = Array.from(lg.getElementsByTagName("l"));
+          for (const l of lines as XMLElement[]) {
+            if (l.getAttribute("n") === kuN) {
+              wrapper.appendChild(l.cloneNode(true) as XMLNode);
+              found = true;
+              break;
+            }
+          }
           break;
         }
       }
 
-      if(!foundSeg) {
+      if (!found) {
         res.status(404).json({ error: "Not Found" });
         return;
       }
-
-      wrapper.appendChild(foundSeg as XMLNode);
-
-      const serializer = new XMLSerializer();
-      const xmlString = serializer.serializeToString(teiCloned);
-      
-      // xml-formatterを使用して整形
-      const formattedXml = xmlFormatter(xmlString, {
-        indentation: '  ',
-        collapseContent: true,
-        lineSeparator: '\n'
-      });
-
-      res.set("Content-Type", "application/xml");
-      res.send(formattedXml);
-      
     } else {
-      // pageの場合
-      const p = xmlDoc.getElementsByTagName("body")[0].getElementsByTagName("p");
+      // 歌全体の取得: waka-001
+      const lgs = Array.from(xmlDoc.getElementsByTagName("lg"));
+      let found = false;
 
-      const children = Array.from(p[0].childNodes) as XMLNode[];
-
-      let flg = false;
-
-      const newP = xmlDoc.createElement("p");
-
-      for(const child of children) {
-        if(child.nodeName === "pb") {
-          if((child as XMLElement).getAttribute("n") === refString) {
-            flg = true;
-          } else {
-            // newP.appendChild(child);
-            flg = false
-          }
-        }
-
-        if(flg) {
-          newP.appendChild(child as XMLNode);
+      for (const lg of lgs as XMLElement[]) {
+        if (lg.getAttribute("xml:id") === refString) {
+          wrapper.appendChild(lg.cloneNode(true) as XMLNode);
+          found = true;
+          break;
         }
       }
 
-      wrapper.appendChild(newP); 
+      if (!found) {
+        res.status(404).json({ error: "Not Found" });
+        return;
+      }
+    }
+  } else if (refString.includes("http")) {
+    // lineの場合
+    const segs = xmlDoc.getElementsByTagName("seg");
+    let foundSeg = null;
 
-      const serializer = new XMLSerializer();
-      const xmlString = serializer.serializeToString(teiCloned);
-      
-      // xml-formatterを使用して整形
-      const formattedXml = xmlFormatter(xmlString, {
-        indentation: '  ',
-        collapseContent: true,
-        lineSeparator: '\n'
-      });
-
-      res.set("Content-Type", "application/xml");
-      res.send(formattedXml);
+    for (const seg of Array.from(segs) as XMLElement[]) {
+      const corresp = seg.getAttribute("corresp");
+      if (corresp === refString) {
+        foundSeg = seg;
+        break;
+      }
     }
 
-    res.status(400).json({ error: "Not Found" });
-    return;
+    if (!foundSeg) {
+      res.status(404).json({ error: "Not Found" });
+      return;
+    }
+
+    wrapper.appendChild(foundSeg as XMLNode);
+  } else {
+    // pageの場合
+    const p = xmlDoc.getElementsByTagName("body")[0].getElementsByTagName("p");
+    const children = Array.from(p[0].childNodes) as XMLNode[];
+    let flg = false;
+    const newP = xmlDoc.createElement("p");
+
+    for (const child of children) {
+      if (child.nodeName === "pb") {
+        if ((child as XMLElement).getAttribute("n") === refString) {
+          flg = true;
+        } else {
+          flg = false;
+        }
+      }
+
+      if (flg) {
+        newP.appendChild(child as XMLNode);
+      }
+    }
+
+    wrapper.appendChild(newP);
   }
+
+  const serializer = new XMLSerializer();
+  const xmlString = serializer.serializeToString(teiCloned);
+
+  const formattedXml = xmlFormatter(xmlString, {
+    indentation: '  ',
+    collapseContent: true,
+    lineSeparator: '\n'
+  });
+
+  res.set("Content-Type", "application/tei+xml");
+  res.send(formattedXml);
 });

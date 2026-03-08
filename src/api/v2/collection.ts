@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 
 import axios from "axios";
+import { citationTrees } from "../../utils/citationTrees";
 
 const COLLECTION_TITLE = "校異源氏物語テキストDB";
 const COLLECTION_DESCRIPTION = "『校異源氏物語』のテキストデータを公開するデータベース";
@@ -24,21 +25,35 @@ export const collectionRouter = Router();
  *         required: false
  *         schema:
  *           type: string
- *         description: Collection identifier
+ *         description: Collection or Resource identifier (URI)
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Page number for paginated results
+ *       - in: query
+ *         name: nav
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [children, parents]
+ *           default: children
+ *         description: "Navigate to children (default) or parents"
  *     responses:
  *       200:
  *         description: Enhanced collection data with DTS v2 format
  *         content:
- *           application/json:
+ *           application/ld+json:
  *             schema:
  *               type: object
  *               properties:
  *                 "@context":
  *                   type: string
- *                   example: "https://distributed-text-services.github.io/specifications/context/1-alpha1.json"
+ *                   example: "https://dtsapi.org/context/v1.0.json"
  *                 dtsVersion:
  *                   type: string
- *                   example: "1-alpha"
+ *                   example: "1.0"
  *                 "@id":
  *                   type: string
  *                 "@type":
@@ -84,6 +99,8 @@ collectionRouter.get("/", async (req: Request, res: Response) => {
 
   const { id } = req.query;
 
+  res.set("Content-Type", "application/ld+json");
+
   if (!id) {
     try {
       const response = await axios.get(url);
@@ -122,37 +139,21 @@ collectionRouter.get("/", async (req: Request, res: Response) => {
 
             totalParents: 1,
             totalChildren: 0,
-            collection: `/api/v2/dts/collection?id=${memberId}`,
-            document: `/api/v2/dts/document?resource=${memberId}{&ref}`,
-            navigation: `/api/v2/dts/navigation?resource=${memberId}{&ref,down}`,
-            citationTrees: [
-              {
-                "@type": "CitationTree",
-                citeStructure: [
-                  {
-                    "@type": "CiteStructure",
-                    citeType: "page",
-                    citeStructure: [
-                      {
-                        "@type": "CiteStructure",
-                        citeType: "line",
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
+            collection: `/api/v2/dts/collection?id=${memberId}{&page,nav}`,
+            document: `/api/v2/dts/document?resource=${memberId}{&ref,start,end,tree,mediaType}`,
+            navigation: `/api/v2/dts/navigation?resource=${memberId}{&ref,start,end,down,tree,page}`,
+            citationTrees,
           });
         }
       }
 
       res.json({
         "@context":
-          "https://distributed-text-services.github.io/specifications/context/1-alpha1.json",
-        dtsVersion: "1-alpha",
+          "https://dtsapi.org/context/v1.0.json",
+        dtsVersion: "1.0",
         "@id": "default",
         "@type": "Collection",
-        collection: "/api/v2/dts/collection{?id}",
+        collection: "/api/v2/dts/collection{?id,page,nav}",
         title: COLLECTION_TITLE,
         description: COLLECTION_DESCRIPTION,
         dublinCore: {
@@ -191,8 +192,8 @@ collectionRouter.get("/", async (req: Request, res: Response) => {
 
           if (memberId === id) {
             res.json({
-              "@context": "https://distributed-text-services.github.io/specifications/context/1-alpha1.json",
-              "dtsVersion": "1-alpha",
+              "@context": "https://dtsapi.org/context/v1.0.json",
+              "dtsVersion": "1.0",
               "@id": memberId,
               "@type" : "Resource",
               "title" : item.label,
@@ -216,26 +217,10 @@ collectionRouter.get("/", async (req: Request, res: Response) => {
               },
               "totalParents": 1,
               "totalChildren": 0,
-              collection: `/api/v2/dts/collection?id=${memberId}`,
-              document: `/api/v2/dts/document?resource=${memberId}{&ref}`,
-              navigation: `/api/v2/dts/navigation?resource=${memberId}{&ref,down}`,
-              citationTrees: [
-                {
-                  "@type": "CitationTree",
-                  citeStructure: [
-                    {
-                      "@type": "CiteStructure",
-                      citeType: "page",
-                      citeStructure: [
-                        {
-                          "@type": "CiteStructure",
-                          citeType: "line",
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
+              collection: `/api/v2/dts/collection?id=${memberId}{&page,nav}`,
+              document: `/api/v2/dts/document?resource=${memberId}{&ref,start,end,tree,mediaType}`,
+              navigation: `/api/v2/dts/navigation?resource=${memberId}{&ref,start,end,down,tree,page}`,
+              citationTrees,
             });
             return;
           }
