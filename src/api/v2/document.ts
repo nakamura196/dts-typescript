@@ -66,7 +66,7 @@ export const documentRouter = Router();
  *         description: Internal server error
  */
 documentRouter.get("/", async (req: Request, res: Response) => {
-  const { ref, resource, start, end, tree } = req.query;
+  const { ref, resource, start, end, tree, mediaType } = req.query;
 
   if (!resource) {
     res.status(400).json({ error: "resource is required" });
@@ -92,6 +92,19 @@ documentRouter.get("/", async (req: Request, res: Response) => {
     return;
   }
 
+  // Determine Content-Type based on mediaType parameter
+  const allowedMediaTypes = ["application/tei+xml", "application/xml", "text/xml"];
+  const requestedMediaType = mediaType as string | undefined;
+  let contentType = "application/tei+xml"; // DTS 1.0 default
+  if (requestedMediaType) {
+    if (allowedMediaTypes.includes(requestedMediaType)) {
+      contentType = requestedMediaType;
+    } else {
+      res.status(406).json({ error: `Unsupported mediaType. Supported: ${allowedMediaTypes.join(", ")}` });
+      return;
+    }
+  }
+
   // DTS 1.0: Link header with rel="collection"
   res.set("Link", `</api/v2/dts/collection?id=${resource}>; rel="collection"`);
 
@@ -104,7 +117,7 @@ documentRouter.get("/", async (req: Request, res: Response) => {
 
   if (!ref) {
     // return xml
-    res.set("Content-Type", "application/tei+xml");
+    res.set("Content-Type", contentType);
     const serializer = new XMLSerializer();
     const xmlString = serializer.serializeToString(xmlDoc);
     res.send(xmlString);
@@ -227,6 +240,6 @@ documentRouter.get("/", async (req: Request, res: Response) => {
     lineSeparator: '\n'
   });
 
-  res.set("Content-Type", "application/tei+xml");
+  res.set("Content-Type", contentType);
   res.send(formattedXml);
 });
