@@ -1,6 +1,10 @@
 import { Router, Request, Response } from "express";
 
-import axios from "axios";
+import {
+  extractVol,
+  fetchInfoJson,
+  respondUpstreamError,
+} from "../../utils/dataSource";
 
 const COLLECTION_TITLE = "校異源氏物語";
 const COLLECTION_ID = "urn:kouigenjimonogatari";
@@ -50,19 +54,23 @@ export const collectionRouter = Router();
  *         description: Internal server error
  */
 collectionRouter.get("/", async (req: Request, res: Response) => {
-  const url = "https://genji.dl.itc.u-tokyo.ac.jp/data/info.json";
-
   const { id } = req.query;
 
+  let data: any;
   try {
-    const response = await axios.get(url);
-    const data = response.data;
+    data = await fetchInfoJson();
+  } catch (error) {
+    respondUpstreamError(res, error);
+    return;
+  }
 
+  try {
     const members: any = [];
 
-    for (const selection of data.selections) {
-      for (const item of selection.members) {
-        const vol = item.metadata.find((m: any) => m.label === "vol").value;
+    for (const selection of data.selections ?? []) {
+      for (const item of selection.members ?? []) {
+        const vol = extractVol(item);
+        if (!vol) continue; // vol メタデータが無い member はスキップ
 
         const memberId = `${COLLECTION_ID}.${vol}`;
 
@@ -139,6 +147,6 @@ collectionRouter.get("/", async (req: Request, res: Response) => {
       res.status(400).json({ error: "Invalid ID" }); // 400エラーを返す
     }
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch data" });
+    respondUpstreamError(res, error);
   }
 });

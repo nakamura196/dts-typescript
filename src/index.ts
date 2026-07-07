@@ -240,6 +240,11 @@ app.use("/api/v2/dts/document", v2DocumentRouter);
 
 app.use("/api/v2/dts/navigation", v2NavigationRouter);
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+// このファイルが直接実行されたときだけ listen する。
+// import されたとき (テスト / Vercel の @vercel/node ハンドラ) は
+// ポートを掴まない (テストの EADDRINUSE や無駄なポート確保を防ぐ)。
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}

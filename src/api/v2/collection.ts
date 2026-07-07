@@ -1,7 +1,11 @@
 import { Router, Request, Response } from "express";
 
-import axios from "axios";
 import { citationTrees } from "../../utils/citationTrees";
+import {
+  extractVol,
+  fetchInfoJson,
+  respondUpstreamError,
+} from "../../utils/dataSource";
 
 const COLLECTION_TITLE = "校異源氏物語テキストDB";
 const COLLECTION_DESCRIPTION = "『校異源氏物語』のテキストデータを公開するデータベース";
@@ -94,144 +98,86 @@ export const collectionRouter = Router();
  *       500:
  *         description: Internal server error
  */
-collectionRouter.get("/", async (req: Request, res: Response) => {
-  const url = "https://genji.dl.itc.u-tokyo.ac.jp/data/info.json";
+/** info.json の member 1件を DTS v2 の Resource オブジェクトに変換する。 */
+function buildResource(memberId: string, label: string) {
+  return {
+    "@id": memberId,
+    title: label,
+    description: `校異源氏物語 ${label}`,
+    "@type": "Resource",
+    dublinCore: {
+      creator: [COLLECTION_CREATOR],
+      title: [{ lang: "ja", value: label }],
+      description: [{ lang: "ja", value: `校異源氏物語 ${label}` }],
+      license: [COLLECTION_LICENSE],
+    },
+    totalParents: 1,
+    totalChildren: 0,
+    collection: `/api/v2/dts/collection?id=${memberId}{&page,nav}`,
+    document: `/api/v2/dts/document?resource=${memberId}{&ref,start,end,tree,mediaType}`,
+    navigation: `/api/v2/dts/navigation?resource=${memberId}{&ref,start,end,down,tree,page}`,
+    citationTrees,
+  };
+}
 
+collectionRouter.get("/", async (req: Request, res: Response) => {
   const { id } = req.query;
 
   res.set("Content-Type", "application/ld+json");
 
-  if (!id) {
-    try {
-      const response = await axios.get(url);
-      const data = response.data;
+  let data: any;
+  try {
+    data = await fetchInfoJson();
+  } catch (error) {
+    respondUpstreamError(res, error);
+    return;
+  }
 
-      const members: any = [];
-
-      for (const selection of data.selections) {
-        for (const item of selection.members) {
-          const vol = item.metadata.find((m: any) => m.label === "vol").value;
-
-          const memberId = `${COLLECTION_ID}.${vol}`;
-
-          members.push({
-            "@id": memberId,
-            title: item.label,
-            description: `校異源氏物語 ${item.label}`,
-            "@type": "Resource",
-            dublinCore: {
-              "creator": [
-                COLLECTION_CREATOR
-              ],
-              "title": [
-                {"lang": "ja", "value": item.label}
-              ],
-              "description": [
-                {
-                  "lang": "ja",
-                  "value": `校異源氏物語 ${item.label}`
-                }
-              ],
-              "license": [
-                COLLECTION_LICENSE
-              ]
-            },
-
-            totalParents: 1,
-            totalChildren: 0,
-            collection: `/api/v2/dts/collection?id=${memberId}{&page,nav}`,
-            document: `/api/v2/dts/document?resource=${memberId}{&ref,start,end,tree,mediaType}`,
-            navigation: `/api/v2/dts/navigation?resource=${memberId}{&ref,start,end,down,tree,page}`,
-            citationTrees,
-          });
-        }
-      }
-
-      res.json({
-        "@context":
-          "https://dtsapi.org/context/v1.0.json",
-        dtsVersion: "1.0",
-        "@id": "default",
-        "@type": "Collection",
-        collection: "/api/v2/dts/collection{?id,page,nav}",
-        title: COLLECTION_TITLE,
-        description: COLLECTION_DESCRIPTION,
-        dublinCore: {
-          "creator": [
-            COLLECTION_CREATOR
-          ],
-          "title": [
-            {"lang": "ja", "value": COLLECTION_TITLE}
-          ],
-          "description": [
-            {
-              "lang": "ja",
-              "value": COLLECTION_DESCRIPTION
-            }
-          ],
-          "license": [
-            COLLECTION_LICENSE
-          ]
-        },
-        totalParents: 0,
-        totalChildren: members.length,
-        member: members,
-      });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch data" });
-    }
-  } else {
-    try {
-      const response = await axios.get(url);
-      const data = response.data;
-
-      for (const selection of data.selections) {
-        for (const item of selection.members) {
-          const vol = item.metadata.find((m: any) => m.label === "vol").value;
-          const memberId = `${COLLECTION_ID}.${vol}`;
-
-          if (memberId === id) {
-            res.json({
-              "@context": "https://dtsapi.org/context/v1.0.json",
-              "dtsVersion": "1.0",
-              "@id": memberId,
-              "@type" : "Resource",
-              "title" : item.label,
-              "description": `校異源氏物語 ${item.label}`,
-              "dublinCore": {
-                "creator": [
-                  COLLECTION_CREATOR
-                ],
-                "title": [
-                  {"lang": "ja", "value": item.label}
-                ],
-                "description": [
-                  {
-                    "lang": "ja",
-                    "value": `校異源氏物語 ${item.label}`
-                  }
-                ],
-                "license": [
-                  COLLECTION_LICENSE
-                ]
-              },
-              "totalParents": 1,
-              "totalChildren": 0,
-              collection: `/api/v2/dts/collection?id=${memberId}{&page,nav}`,
-              document: `/api/v2/dts/document?resource=${memberId}{&ref,start,end,tree,mediaType}`,
-              navigation: `/api/v2/dts/navigation?resource=${memberId}{&ref,start,end,down,tree,page}`,
-              citationTrees,
-            });
-            return;
-          }
-        }
-      }
-
-      // リソースが見つからない場合
-      res.status(404).json({ error: "Resource not found" });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch data" });
+  const members = [];
+  for (const selection of data.selections ?? []) {
+    for (const item of selection.members ?? []) {
+      const vol = extractVol(item);
+      if (!vol) continue; // vol メタデータが無い member はスキップ
+      members.push(buildResource(`${COLLECTION_ID}.${vol}`, item.label));
     }
   }
-  
+
+  // id 指定なし: ルートコレクションを返す
+  if (!id) {
+    res.json({
+      "@context": "https://dtsapi.org/context/v1.0.json",
+      dtsVersion: "1.0",
+      "@id": "default",
+      "@type": "Collection",
+      collection: "/api/v2/dts/collection{?id,page,nav}",
+      title: COLLECTION_TITLE,
+      description: COLLECTION_DESCRIPTION,
+      dublinCore: {
+        creator: [COLLECTION_CREATOR],
+        title: [{ lang: "ja", value: COLLECTION_TITLE }],
+        description: [{ lang: "ja", value: COLLECTION_DESCRIPTION }],
+        license: [COLLECTION_LICENSE],
+      },
+      totalParents: 0,
+      totalChildren: members.length,
+      member: members,
+    });
+    return;
+  }
+
+  // id 指定あり: 該当リソースを返す
+  const resource = members.find((m) => m["@id"] === id);
+  if (!resource) {
+    res.status(404).json({
+      error: "ResourceNotFound",
+      message: `指定された id のリソースが見つかりません: ${id}`,
+    });
+    return;
+  }
+
+  res.json({
+    "@context": "https://dtsapi.org/context/v1.0.json",
+    dtsVersion: "1.0",
+    ...resource,
+  });
 });
