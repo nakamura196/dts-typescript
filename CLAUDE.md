@@ -54,7 +54,7 @@ Citation Trees are defined in `src/utils/citationTrees.ts` and shared across col
 - OpenAPI/Swagger documentation auto-generated from JSDoc comments
 - Swagger UI available at `/api-docs`
 - CORS enabled for all origins
-- Production: `https://dts-typescript.vercel.app`
+- Production: `https://dts.ldas.jp` (旧 `https://dts-typescript.vercel.app` も API は応答し続ける。`/` と `/api-docs` だけ vercel.json の redirects で dts.ldas.jp へ 308)
 - Development: `http://localhost:3403`
 
 ### XML Processing Types

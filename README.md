@@ -8,7 +8,7 @@ Multiple citation trees are supported:
 
 ## 🌐 Website
 
-[Visit the demo page](https://dts-typescript.vercel.app/api/dts) to try it out.
+[Visit the demo page](https://dts.ldas.jp/api/dts) to try it out.
 
 ## Setup
 
