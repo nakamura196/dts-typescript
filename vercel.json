@@ -6,6 +6,20 @@
       "use": "@vercel/node"
     }
   ],
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "dts-typescript.vercel.app" }],
+      "destination": "https://dts.ldas.jp/",
+      "permanent": true
+    },
+    {
+      "source": "/api-docs",
+      "has": [{ "type": "host", "value": "dts-typescript.vercel.app" }],
+      "destination": "https://dts.ldas.jp/api-docs",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/",

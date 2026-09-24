@@ -32,7 +32,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: "https://dts-typescript.vercel.app",
+        url: "https://dts.ldas.jp",
         description: "Production server",
       },
       {
