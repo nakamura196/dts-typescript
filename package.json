@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@xmldom/xmldom": "^0.9.8",
+    "@xmldom/xmldom": "^0.9.12",
     "axios": "^1.20.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
